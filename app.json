@@ -15,40 +15,21 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true,
-      "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "We need your location to find hackathons near you.",
-        "NSCalendarsUsageDescription": "We need access to your calendar to add hackathon events."
-      }
+      "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      },
-      "permissions": [
-        "ACCESS_COARSE_LOCATION",
-        "ACCESS_FINE_LOCATION",
-        "READ_CALENDAR",
-        "WRITE_CALENDAR"
-      ]
+      }
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
     },
-    "plugins": [
-      [
-        "expo-location",
-        {
-          "locationAlwaysAndWhenInUsePermission": "Allow HackSwipe to use your location to find hackathons near you."
-        }
-      ],
-      [
-        "expo-calendar",
-        {
-          "calendarPermission": "Allow HackSwipe to access your calendar to add hackathon events."
-        }
-      ]
-    ]
+    "experiments": {
+      "tsconfigPaths": true
+    },
+    "platforms": ["android", "ios", "web"]
   }
 }
