@@ -1,0 +1,264 @@
+Absolutely — here is the **first message you sent**, ending with `END OF SPEC`:
+
+---
+
+**User's Message:**
+
+> I am making an app using expo react native react 19. THE expo version is sdk 53 and the react version is 19 DO NOT use any components that are NOT compatible with these versions. I want to prototype the app. STRICTLY make a folder stucture and FOLLOW it. DO not MORE than 7 Folders. Store the Folder stucture in your Memories if you have to in order to strictly remember and Follow it. every time you give me a file make sure you give me the foldername/filename. GIVE ME THE POWERSHELL COMMAND to create ALL files according to A folder structuctre you are going to Follow. Strictly use expo Router. Below are the requirements
+
+---
+
+**# HackSwipe Mobile App - Project Manufacturing Specification**
+
+## 🧠 OVERVIEW
+
+**HackSwipe** is a mobile-first hackathon discovery and engagement application, built with **React Native (Expo)** for iOS and Android. It helps users **find hackathons near them**, **swipe Tinder-style to join**, manage **freelance or hiring opportunities**, and maintain a personal **profile and event record**.
+
+The app should prioritize **performance**, **clean UI**, and **mobile-native experience**, and **MUST be fully functional on the first execution** with no half-baked pages.
+
+---
+
+## ⚙️ TECH STACK
+
+* **Frontend**: React Native + Expo
+* **Navigation**: React Navigation
+* **UI Framework**: Tailwind via `nativewind` or `tailwind-react-native-classnames`
+* **Backend**: Supabase (auth, database, storage)
+* **Location**: Expo Location API
+* **Calendar**: Expo Calendar API
+* **Swipe Engine**: `react-native-deck-swiper`
+* **AI/ML (Optional)**: Gemini API integration if GPT-4o defers to it
+* **Main LLM**: GPT-4o (handle reasoning, autogeneration if needed)
+
+---
+
+## 📲 CORE FEATURES & REQUIREMENTS
+
+### 1. 📍 LOCATION SCREEN
+
+* The first screen shows a **"Use My Location"** button.
+* When pressed, fetch the user’s location via Expo Location.
+* Simulate **San Francisco coordinates** for testing: `(37.7749, -122.4194)`.
+* Show a loading indicator or animation during geolocation lookup.
+* Proceed to the swipe deck once location is confirmed.
+* Filter hackathons to show only those within **50km radius**.
+
+---
+
+### 2. 🔄 TINDER-STYLE SWIPE INTERFACE
+
+* This is the **main feature**.
+* Each card must display:
+
+  * Hackathon Name
+  * Dates (start/end)
+  * Application Deadline
+  * Location
+  * Distance (from user)
+  * Tags (e.g., AI, Web3)
+  * Max Team Size
+* Swiping:
+
+  * Left = Skip
+  * Right = Join
+* Show **"Skip"** or **"Join"** overlay animations as feedback.
+* Include **manual swipe buttons** (left/right) for accessibility.
+* Load 10–15 cards at a time (can simulate with mock data).
+
+---
+
+### 3. ✅ JOIN MODAL FLOW
+
+* Appears when a card is swiped right.
+* Shows two options:
+
+  1. **Join Solo**:
+
+     * Confirmation prompt.
+     * Option to add to calendar.
+  2. **Join With Team**:
+
+     * Enter team name.
+     * Invite up to 4 team members via email (just store emails).
+* After joining, save the event and show success state.
+* Save to Supabase user table (`joined_hackathons[]` field).
+
+---
+
+### 4. 📅 CALENDAR INTEGRATION
+
+* On successful join (solo or team), ask:
+
+  > "Add this event to your calendar?"
+* If user agrees, use **Expo Calendar API** to:
+
+  * Create a new calendar event with:
+
+    * Event name
+    * Dates
+    * Location
+* Show a **visual confirmation** (checkmark, toast).
+
+---
+
+### 5. 📁 MY EVENTS SECTION
+
+* This is a **bottom tab** called `My Events`.
+* Contains 2 tabs:
+
+  * **Upcoming Events**
+  * **Past Events**
+* Each entry shows:
+
+  * Event name
+  * Date(s)
+  * Joined as: Solo / Team
+  * Option to remove the event
+
+---
+
+### 6. 🧑 PROFILE SECTION
+
+* Another bottom tab: `Profile`.
+* Displays:
+
+  * Avatar
+  * Name
+  * Role (Dev, Designer, PM, etc.)
+  * Location
+  * Skills (tag-style badges)
+  * Availability toggle (Available / Busy)
+  * Event Stats (Hackathons joined)
+* Include:
+
+  * `Edit Profile` button (opens modal with form)
+  * `Upload Resume` button
+  * `Logout` (optional)
+
+---
+
+### 7. 💼 FREELANCE PAGE
+
+* Tab: `Freelance`
+* Swipeable cards for **available hackathon gigs**:
+
+  * Event
+  * Skills Required (badges)
+  * Pay range
+  * Remote status
+  * Deadline
+* Swipe right to apply, left to skip
+* Filters:
+
+  * Text search (gig title)
+  * Multi-select skills
+  * Budget range slider
+  * Remote only toggle
+* Add top filter bar or modal filter sheet
+
+---
+
+### 8. 🧑‍💻 HIRE DEVS PAGE
+
+* Tab: `Hire Devs`
+* Swipe through **developer profile cards**:
+
+  * Name
+  * Skills
+  * Availability (color tag)
+  * Experience level
+  * Mini bio
+* Swipe right to **invite to team**, left to skip
+* Filters:
+
+  * Skill tags
+  * Experience level (Junior, Mid, Senior)
+  * Availability (Now / Soon / Busy)
+
+---
+
+## 📐 UI/UX REQUIREMENTS
+
+* Must be **mobile-optimized** for all iOS/Android screen sizes.
+* Use **rounded cards**, clean layouts, intuitive modals.
+* All text must be legible, buttons large enough for touch.
+* Use Tailwind consistently across the app.
+* Use icons for navigation tabs.
+* Transitions/animations:
+
+  * Swipe gestures
+  * Modal slide-ups
+  * Calendar additions
+  * Button feedback
+
+---
+
+## 📦 DATA STRUCTURE EXAMPLES (SUPABASE)
+
+### `users` table:
+
+\| id | name | email | role | skills | location | joined\_hackathons |
+
+### `hackathons` table:
+
+\| id | name | location | tags | start\_date | end\_date | deadline | max\_team\_size |
+
+### `freelance_gigs` table:
+
+\| id | title | skills\_required | pay | remote | deadline |
+
+### `developers` table:
+
+\| id | name | skills | availability | experience | bio |
+
+---
+
+## 🚫 WHAT TO IGNORE
+
+* **NO Auth for now** — skip sign-up/sign-in completely.
+* **No Gemini API work yet** unless GPT-4o wants to add it.
+* **Do NOT leave any page half implemented.**
+* **Do NOT skip calendar integration.**
+* **Do NOT use web technologies like Next.js.**
+
+---
+
+## ✅ FINAL ACCEPTANCE CRITERIA
+
+* App must run 100% in **React Native (Expo)**.
+* All tabs and navigation must work.
+* Each feature must:
+
+  * Be visible
+  * Be interactive
+  * Reflect proper state (e.g., joined events persist)
+* Calendar and location **must** be functional using Expo APIs.
+* Swipe logic must be tested and functional.
+* App should be visually consistent and polished.
+* AI (Trae / GPT-4o) should assume **one-day build cycle**, and output **full app logic**, not a skeleton.
+
+---
+
+## 🧪 MOCK TESTING LOCATIONS
+
+Use this mock location for development:
+
+* `Latitude`: 37.7749
+* `Longitude`: -122.4194
+
+Use radius filters of **50km** for displaying local hackathons.
+
+---
+
+## 🧠 NOTES FOR GPT-4o AGENT
+
+* Prioritize **feature completion** over dummy UI.
+* Generate real working logic.
+* Do not abstract logic into "todo" comments.
+* Do not defer implementation to later stages — this is the final version.
+* Avoid filler text like “you can integrate X here later”.
+* Be exhaustive and deterministic.
+
+---
+
+**# END OF SPEC**
