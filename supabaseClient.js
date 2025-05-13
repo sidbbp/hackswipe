@@ -1,9 +1,14 @@
 import { createClient } from '@supabase/supabase-js';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Get these from your Supabase dashboard
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
+// Use the secrets directly - these are injected through environment variables
+// You'll need to provide your Supabase URL and key from your dashboard
+const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.warn('Supabase credentials missing. Using mock data only.');
+}
 
 // Set up supabase client with AsyncStorage for React Native
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
