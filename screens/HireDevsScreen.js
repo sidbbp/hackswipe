@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   View, 
   Text, 
@@ -13,7 +13,6 @@ import {
   Alert
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Swiper from 'react-native-deck-swiper';
 import { Feather } from '@expo/vector-icons';
 import { fetchDevelopers } from '../supabaseClient';
 import { mockDevelopers } from '../data/mockData';
@@ -22,7 +21,6 @@ import ProfileCard from '../components/ProfileCard';
 const { width } = Dimensions.get('window');
 
 const HireDevsScreen = () => {
-  const swiperRef = useRef(null);
   const [developers, setDevelopers] = useState([]);
   const [filteredDevelopers, setFilteredDevelopers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -120,24 +118,33 @@ const HireDevsScreen = () => {
     });
   };
 
-  const handleSwipe = (direction) => {
-    if (direction === 'right') {
-      // Invite the developer
-      setOverlayLabel('Invite');
-      
-      if (filteredDevelopers[cardIndex]) {
-        setSelectedDeveloper(filteredDevelopers[cardIndex]);
-        setInviteModalVisible(true);
-      }
-    } else {
-      // Skip
-      setOverlayLabel('Skip');
-    }
+  const handleSkip = () => {
+    setOverlayLabel('Skip');
     
     // Reset overlay after animation
     setTimeout(() => {
       setOverlayLabel(null);
+      if (cardIndex < filteredDevelopers.length - 1) {
+        setCardIndex(cardIndex + 1);
+      }
     }, 500);
+  };
+  
+  const handleInvite = () => {
+    setOverlayLabel('Invite');
+    
+    if (filteredDevelopers[cardIndex]) {
+      setSelectedDeveloper(filteredDevelopers[cardIndex]);
+      setInviteModalVisible(true);
+      
+      // Move to next card
+      setTimeout(() => {
+        setOverlayLabel(null);
+        if (cardIndex < filteredDevelopers.length - 1) {
+          setCardIndex(cardIndex + 1);
+        }
+      }, 500);
+    }
   };
 
   const handleSendInvite = () => {
@@ -209,90 +216,25 @@ const HireDevsScreen = () => {
         </View>
       ) : (
         <View style={styles.swiperContainer}>
-          <Swiper
-            ref={swiperRef}
-            cards={filteredDevelopers}
-            renderCard={(developer) => (
+          <View style={styles.cardContainer}>
+            {filteredDevelopers[cardIndex] && (
               <ProfileCard 
-                developer={developer} 
-                onSwipe={handleSwipe} 
+                developer={filteredDevelopers[cardIndex]} 
               />
             )}
-            onSwiped={(index) => setCardIndex(index + 1)}
-            onSwipedLeft={() => handleSwipe('left')}
-            onSwipedRight={() => handleSwipe('right')}
-            cardIndex={0}
-            backgroundColor={'transparent'}
-            stackSize={3}
-            stackSeparation={15}
-            disableTopSwipe
-            disableBottomSwipe
-            animateOverlayLabelsOpacity
-            overlayLabels={{
-              left: {
-                title: 'SKIP',
-                style: {
-                  label: {
-                    backgroundColor: 'rgba(239, 68, 68, 0.8)',
-                    color: 'white',
-                    fontSize: 24,
-                    borderWidth: 2,
-                    borderColor: 'white',
-                    padding: 10,
-                    paddingHorizontal: 20,
-                    borderRadius: 10,
-                    fontWeight: '600',
-                  },
-                  wrapper: {
-                    flexDirection: 'column',
-                    alignItems: 'flex-start',
-                    justifyContent: 'flex-start',
-                    marginLeft: 30,
-                    marginTop: 30,
-                  },
-                },
-              },
-              right: {
-                title: 'INVITE',
-                style: {
-                  label: {
-                    backgroundColor: 'rgba(16, 185, 129, 0.8)',
-                    color: 'white',
-                    fontSize: 24,
-                    borderWidth: 2,
-                    borderColor: 'white',
-                    padding: 10,
-                    paddingHorizontal: 20,
-                    borderRadius: 10,
-                    fontWeight: '600',
-                  },
-                  wrapper: {
-                    flexDirection: 'column',
-                    alignItems: 'flex-end',
-                    justifyContent: 'flex-start',
-                    marginRight: 30,
-                    marginTop: 30,
-                  },
-                },
-              },
-            }}
-          />
+          </View>
 
           <View style={styles.buttonsContainer}>
             <TouchableOpacity
               style={[styles.button, styles.skipButton]}
-              onPress={() => {
-                swiperRef.current.swipeLeft();
-              }}
+              onPress={handleSkip}
             >
               <Feather name="x" size={28} color="#EF4444" />
             </TouchableOpacity>
             
             <TouchableOpacity
               style={[styles.button, styles.inviteButton]}
-              onPress={() => {
-                swiperRef.current.swipeRight();
-              }}
+              onPress={handleInvite}
             >
               <Feather name="user-plus" size={28} color="#10B981" />
             </TouchableOpacity>
