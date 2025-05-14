@@ -72,7 +72,7 @@ const SwipeScreen = ({ userLocation }) => {
       if (cardIndex < hackathons.length - 1) {
         setCardIndex(cardIndex + 1);
       }
-    }, 300);
+    }, 10);
   };
   
   const handleJoin = () => {
@@ -85,7 +85,7 @@ const SwipeScreen = ({ userLocation }) => {
       if (cardIndex < hackathons.length - 1) {
         setCardIndex(cardIndex + 1);
       }
-    }, 300);
+    }, 10);
   };
 
   const onJoinModalClose = () => {

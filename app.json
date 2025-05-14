@@ -27,8 +27,11 @@
       },
       "permissions": [
         "ACCESS_FINE_LOCATION",
-        "ACCESS_COARSE_LOCATION"
-      ]
+        "ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
+      ],
+      "package": "com.sidbbp.hackswipe"
     },
     "web": {
       "favicon": "./assets/favicon.png",
@@ -44,12 +47,16 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "hackswipe"
+        "projectId": "9b055447-e8b5-495a-8150-444be380e899"
       }
     },
     "experiments": {
       "tsconfigPaths": true
     },
-    "platforms": ["android", "ios", "web"]
+    "platforms": [
+      "android",
+      "ios",
+      "web"
+    ]
   }
 }

@@ -58,15 +58,7 @@ const MainTabNavigator = ({ userLocation }) => {
         }}
       />
       
-      <Tab.Screen 
-        name="Freelance" 
-        component={FreelanceScreen} 
-        options={{
-          tabBarIcon: ({ color, size }) => (
-            <Feather name="briefcase" size={size} color={color} />
-          ),
-        }}
-      />
+  
       
       <Tab.Screen 
         name="Hire Devs" 

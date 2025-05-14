@@ -1,107 +1,91 @@
-import React from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  TouchableOpacity,
-  ScrollView,
-} from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { GestureDetector, Gesture } from 'react-native-gesture-handler';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  runOnJS,
+} from 'react-native-reanimated';
 import { Feather } from '@expo/vector-icons';
+import { mockDevelopers } from '../data/mockData';
 
-const mockDeveloper = {
-  name: 'Alex Johnson',
-  role: 'Full Stack Developer',
-  skills: ['React', 'Node.js', 'AWS'],
-  experience: 'Senior',
-  availability: 'Available'
-};
+const SCREEN_WIDTH = Dimensions.get('window').width;
 
-const HireDevsScreen = ({ navigation }) => {
+const HireDevsScreen = () => {
+  const [index, setIndex] = useState(0);
+  const translateX = useSharedValue(0);
+  const rotateZ = useSharedValue(0);
+
+  const handleNextCard = () => {
+    setIndex(prev => (prev + 1 < mockDevelopers.length ? prev + 1 : 0));
+    translateX.value = 0;
+    rotateZ.value = 0;
+  };
+
+  const pan = Gesture.Pan()
+    .onUpdate(e => {
+      translateX.value = e.translationX;
+      rotateZ.value = (e.translationX / SCREEN_WIDTH) * 15;
+    })
+    .onEnd(e => {
+      if (Math.abs(e.translationX) > SCREEN_WIDTH * 0.25) {
+        translateX.value = withTiming(
+          e.translationX > 0 ? SCREEN_WIDTH : -SCREEN_WIDTH,
+          { duration: 300 },
+          () => runOnJS(handleNextCard)()
+        );
+      } else {
+        translateX.value = withTiming(0, { duration: 300 });
+        rotateZ.value = withTiming(0, { duration: 300 });
+      }
+    });
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [
+      { translateX: translateX.value },
+      { rotateZ: `${rotateZ.value}deg` },
+    ],
+  }));
+
+  const developer = mockDevelopers[index];
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Hire Developers</Text>
-        <TouchableOpacity style={styles.filterButton}>
-          <Feather name="sliders" size={20} color="#111827" />
-        </TouchableOpacity>
+        <Feather name="sliders" size={20} color="#111827" />
       </View>
-      
-      <ScrollView style={styles.content}>
-        <View style={styles.developerCard}>
-          <View style={styles.profileContainer}>
-            <View style={styles.profilePhoto}>
-              <Text style={styles.profileInitial}>{mockDeveloper.name[0]}</Text>
-            </View>
-            <View style={styles.profileInfo}>
-              <Text style={styles.developerName}>{mockDeveloper.name}</Text>
-              <Text style={styles.developerRole}>{mockDeveloper.role}</Text>
-            </View>
-            <View style={styles.availabilityContainer}>
-              <View style={styles.availabilityDot} />
-              <Text style={styles.availabilityText}>{mockDeveloper.availability}</Text>
-            </View>
-          </View>
-          
-          <View style={styles.skillsContainer}>
-            {mockDeveloper.skills.map((skill, index) => (
-              <View key={index} style={styles.skillBadge}>
-                <Text style={styles.skillText}>{skill}</Text>
+
+      <View style={styles.cardContainer}>
+        <GestureDetector gesture={pan}>
+          <Animated.View style={[styles.card, animatedStyle]}>
+            <View style={styles.profileHeader}>
+              <View style={styles.profilePhoto}>
+                <Text style={styles.initial}>{developer.name[0]}</Text>
               </View>
-            ))}
-          </View>
-          
-          <View style={styles.actionsContainer}>
-            <TouchableOpacity style={styles.declineButton}>
-              <Feather name="x" size={20} color="#EF4444" />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.viewProfileButton}>
-              <Text style={styles.viewProfileButtonText}>View Profile</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.inviteButton}>
-              <Feather name="user-plus" size={20} color="#4F46E5" />
-            </TouchableOpacity>
-          </View>
-        </View>
-      </ScrollView>
-      
-      <View style={styles.tabBar}>
-        <TouchableOpacity 
-          style={styles.tabItem}
-          onPress={() => navigation.navigate('SwipeScreen')}
-        >
-          <Feather name="home" size={24} color="#9CA3AF" />
-          <Text style={styles.tabLabel}>Find Hackathons</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={styles.tabItem}
-          onPress={() => navigation.navigate('MyEvents')}
-        >
-          <Feather name="calendar" size={24} color="#9CA3AF" />
-          <Text style={styles.tabLabel}>My Events</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={styles.tabItem}
-          onPress={() => navigation.navigate('Freelance')}
-        >
-          <Feather name="briefcase" size={24} color="#9CA3AF" />
-          <Text style={styles.tabLabel}>Freelance</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity style={styles.tabItem}>
-          <Feather name="users" size={24} color="#4F46E5" />
-          <Text style={[styles.tabLabel, styles.activeTabText]}>Hire Devs</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={styles.tabItem}
-          onPress={() => navigation.navigate('Profile')}
-        >
-          <Feather name="user" size={24} color="#9CA3AF" />
-          <Text style={styles.tabLabel}>Profile</Text>
-        </TouchableOpacity>
+              <View>
+                <Text style={styles.name}>{developer.name}</Text>
+                <Text style={styles.experience}>{developer.experience} level</Text>
+              </View>
+              <View style={styles.availability}>
+                <View style={styles.dot} />
+                <Text style={styles.availabilityText}>{developer.availability}</Text>
+              </View>
+            </View>
+
+            <Text style={styles.bio}>{developer.bio}</Text>
+
+            <View style={styles.skills}>
+              {developer.skills.map((skill, i) => (
+                <View key={i} style={styles.skillBadge}>
+                  <Text style={styles.skillText}>{skill}</Text>
+                </View>
+              ))}
+            </View>
+          </Animated.View>
+        </GestureDetector>
       </View>
     </SafeAreaView>
   );
@@ -115,10 +99,9 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#fff',
     borderBottomWidth: 1,
     borderBottomColor: '#E5E7EB',
   },
@@ -127,68 +110,59 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#111827',
   },
-  filterButton: {
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  content: {
+  cardContainer: {
     flex: 1,
-    padding: 16,
+    justifyContent: 'center',
+    paddingHorizontal: 20,
   },
-  developerCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
+  card: {
+    backgroundColor: '#fff',
+    padding: 20,
+    borderRadius: 16,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 2 },
     shadowRadius: 4,
-    elevation: 2,
-    padding: 16,
-    marginBottom: 16,
+    elevation: 3,
   },
-  profileContainer: {
+  profileHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 16,
   },
   profilePhoto: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
     backgroundColor: '#E5E7EB',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
   },
-  profileInitial: {
+  initial: {
     fontSize: 24,
     fontWeight: 'bold',
     color: '#6B7280',
   },
-  profileInfo: {
-    flex: 1,
-  },
-  developerName: {
+  name: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '600',
     color: '#111827',
-    marginBottom: 4,
   },
-  developerRole: {
+  experience: {
     fontSize: 14,
-    color: '#4B5563',
+    color: '#6B7280',
   },
-  availabilityContainer: {
+  availability: {
+    marginLeft: 'auto',
+    backgroundColor: '#ECFDF5',
+    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F3F4F6',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 16,
   },
-  availabilityDot: {
+  dot: {
     width: 8,
     height: 8,
     borderRadius: 4,
@@ -200,10 +174,14 @@ const styles = StyleSheet.create({
     color: '#10B981',
     fontWeight: '500',
   },
-  skillsContainer: {
+  bio: {
+    fontSize: 14,
+    color: '#374151',
+    marginBottom: 16,
+  },
+  skills: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginBottom: 16,
   },
   skillBadge: {
     backgroundColor: '#F3F4F6',
@@ -214,65 +192,8 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   skillText: {
-    fontSize: 14,
+    fontSize: 13,
     color: '#4B5563',
-  },
-  actionsContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
-    paddingTop: 16,
-  },
-  declineButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#FEE2E2',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  viewProfileButton: {
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
-  },
-  viewProfileButtonText: {
-    fontSize: 14,
-    color: '#374151',
-    fontWeight: '500',
-  },
-  inviteButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#E0E7FF',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  tabBar: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
-  },
-  tabItem: {
-    alignItems: 'center',
-  },
-  tabLabel: {
-    fontSize: 12,
-    color: '#9CA3AF',
-    marginTop: 4,
-  },
-  activeTabText: {
-    color: '#4F46E5',
   },
 });
 

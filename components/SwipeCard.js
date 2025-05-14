@@ -2,21 +2,22 @@ import React from 'react';
 import { View, Text, StyleSheet, Dimensions, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Feather } from '@expo/vector-icons';
-
 const { width, height } = Dimensions.get('window');
 const CARD_WIDTH = width * 0.9;
-const CARD_HEIGHT = height * 0.6;
+const CARD_HEIGHT = height * 0.85;
+
 
 const SwipeCard = ({ hackathon, overlayLabel }) => {
   const {
     name,
+    image,
     start_date,
     end_date,
     application_deadline,
     location,
-    distance,
-    tags,
-    max_team_size,
+    distance = 0,
+    tags = [],
+    max_team_size = 1,
   } = hackathon;
 
   const formatDate = (dateString) => {
@@ -24,76 +25,55 @@ const SwipeCard = ({ hackathon, overlayLabel }) => {
     return new Date(dateString).toLocaleDateString('en-US', options);
   };
 
+  const InfoRow = ({ icon, color, label, value }) => (
+    <View style={styles.infoRow}>
+      <View style={[styles.iconContainer, { backgroundColor: '#F3F4F6' }]}>
+        <Feather name={icon} size={20} color={color} />
+      </View>
+      <View style={styles.infoText}>
+        <Text style={styles.label}>{label}</Text>
+        <Text style={styles.value}>{value}</Text>
+      </View>
+    </View>
+  );
+
   return (
     <View style={styles.card}>
-      {/* Overlay Label (Skip/Join) */}
       {overlayLabel && (
-        <View style={[
-          styles.overlayLabel,
-          { backgroundColor: overlayLabel === 'Join' ? 'rgba(16, 185, 129, 0.9)' : 'rgba(239, 68, 68, 0.9)' }
-        ]}>
+        <View
+          style={[
+            styles.overlayLabel,
+            {
+              backgroundColor:
+                overlayLabel === 'Join'
+                  ? 'rgba(16, 185, 129, 0.85)'
+                  : 'rgba(239, 68, 68, 0.85)',
+            },
+          ]}
+        >
           <Text style={styles.overlayLabelText}>{overlayLabel}</Text>
         </View>
       )}
 
-      {/* Card Header */}
+      <Image
+        source={
+          require('D:\\programmingStuff\\AI-apps\\SmartTracker\\assets\\splash.png')
+        }
+        style={styles.image}
+        resizeMode="cover"
+      />
+
       <View style={styles.header}>
         <Text style={styles.title}>{name}</Text>
       </View>
 
-      {/* Card Body */}
       <View style={styles.body}>
-        <View style={styles.infoRow}>
-          <View style={styles.iconContainer}>
-            <Feather name="calendar" size={20} color="#4F46E5" />
-          </View>
-          <View style={styles.infoText}>
-            <Text style={styles.label}>Dates</Text>
-            <Text style={styles.value}>{formatDate(start_date)} - {formatDate(end_date)}</Text>
-          </View>
-        </View>
+        <InfoRow icon="calendar" color="#4F46E5" label="Dates" value={`${formatDate(start_date)} - ${formatDate(end_date)}`} />
+        <InfoRow icon="clock" color="#F59E0B" label="Application Deadline" value={formatDate(application_deadline)} />
+        <InfoRow icon="map-pin" color="#EF4444" label="Location" value={location} />
+        <InfoRow icon="navigation" color="#8B5CF6" label="Distance" value={`${distance} km away`} />
+        <InfoRow icon="users" color="#10B981" label="Team Size" value={`Up to ${max_team_size} members`} />
 
-        <View style={styles.infoRow}>
-          <View style={styles.iconContainer}>
-            <Feather name="clock" size={20} color="#F59E0B" />
-          </View>
-          <View style={styles.infoText}>
-            <Text style={styles.label}>Application Deadline</Text>
-            <Text style={styles.value}>{formatDate(application_deadline)}</Text>
-          </View>
-        </View>
-
-        <View style={styles.infoRow}>
-          <View style={styles.iconContainer}>
-            <Feather name="map-pin" size={20} color="#EF4444" />
-          </View>
-          <View style={styles.infoText}>
-            <Text style={styles.label}>Location</Text>
-            <Text style={styles.value}>{location}</Text>
-          </View>
-        </View>
-
-        <View style={styles.infoRow}>
-          <View style={styles.iconContainer}>
-            <Feather name="navigation" size={20} color="#8B5CF6" />
-          </View>
-          <View style={styles.infoText}>
-            <Text style={styles.label}>Distance</Text>
-            <Text style={styles.value}>{distance} km away</Text>
-          </View>
-        </View>
-
-        <View style={styles.infoRow}>
-          <View style={styles.iconContainer}>
-            <Feather name="users" size={20} color="#10B981" />
-          </View>
-          <View style={styles.infoText}>
-            <Text style={styles.label}>Team Size</Text>
-            <Text style={styles.value}>Up to {max_team_size} members</Text>
-          </View>
-        </View>
-
-        {/* Tags */}
         <View style={styles.tagsContainer}>
           {tags.map((tag, index) => (
             <View key={index} style={styles.tag}>
@@ -103,14 +83,8 @@ const SwipeCard = ({ hackathon, overlayLabel }) => {
         </View>
       </View>
 
-      {/* Card Footer */}
-      <LinearGradient
-        colors={['transparent', 'rgba(0,0,0,0.1)']}
-        style={styles.footer}
-      >
-        <Text style={styles.swipeHint}>
-          ← Swipe left to skip • Swipe right to join →
-        </Text>
+      <LinearGradient colors={['transparent', 'rgba(0,0,0,0.06)']} style={styles.footer}>
+        <Text style={styles.swipeHint}>← Swipe left to skip • Swipe right to join →</Text>
       </LinearGradient>
     </View>
   );
@@ -129,6 +103,11 @@ const styles = StyleSheet.create({
     elevation: 5,
     position: 'relative',
     overflow: 'hidden',
+  },
+  image: {
+    width: '100%',
+    height: '40%',
+    resizeMode: 'cover',
   },
   overlayLabel: {
     position: 'absolute',
@@ -173,7 +152,6 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#F3F4F6',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,

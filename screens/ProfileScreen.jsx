@@ -88,44 +88,6 @@ const ProfileScreen = ({ navigation }) => {
         </View>
       </ScrollView>
       
-      <View style={styles.tabBar}>
-        <TouchableOpacity 
-          style={styles.tabItem}
-          onPress={() => navigation.navigate('SwipeScreen')}
-        >
-          <Feather name="home" size={24} color="#9CA3AF" />
-          <Text style={styles.tabLabel}>Find Hackathons</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={styles.tabItem}
-          onPress={() => navigation.navigate('MyEvents')}
-        >
-          <Feather name="calendar" size={24} color="#9CA3AF" />
-          <Text style={styles.tabLabel}>My Events</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={styles.tabItem}
-          onPress={() => navigation.navigate('Freelance')}
-        >
-          <Feather name="briefcase" size={24} color="#9CA3AF" />
-          <Text style={styles.tabLabel}>Freelance</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={styles.tabItem}
-          onPress={() => navigation.navigate('HireDevs')}
-        >
-          <Feather name="users" size={24} color="#9CA3AF" />
-          <Text style={styles.tabLabel}>Hire Devs</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity style={styles.tabItem}>
-          <Feather name="user" size={24} color="#4F46E5" />
-          <Text style={[styles.tabLabel, styles.activeTabText]}>Profile</Text>
-        </TouchableOpacity>
-      </View>
     </SafeAreaView>
   );
 };
@@ -160,26 +122,30 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   coverPhoto: {
-    height: 150,
+    height: 200,
     justifyContent: 'flex-end',
+    borderBottomLeftRadius: 16,
+    borderBottomRightRadius: 16,
   },
   profilePhotoContainer: {
-    position: 'relative',
-    marginLeft: 16,
-    marginBottom: -40,
-  },
-  profilePhoto: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: '#E5E7EB',
+    position: 'absolute',
+    left: 16,
+    bottom: 0,
+    borderRadius: 50,
+    backgroundColor: '#FFFFFF',
     borderWidth: 4,
     borderColor: '#FFFFFF',
+  },
+  profilePhoto: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: '#E5E7EB',
     alignItems: 'center',
     justifyContent: 'center',
   },
   profileInitial: {
-    fontSize: 32,
+    fontSize: 42,
     fontWeight: 'bold',
     color: '#6B7280',
   },
@@ -187,7 +153,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 0,
     right: 0,
-    backgroundColor: '#6B7280',
+    backgroundColor: '#4F46E5',
     borderRadius: 12,
     width: 24,
     height: 24,
@@ -199,15 +165,17 @@ const styles = StyleSheet.create({
     paddingTop: 48,
     paddingHorizontal: 16,
     flex: 1,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
   },
   profileHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     marginBottom: 24,
   },
   profileName: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: 'bold',
     color: '#111827',
     marginBottom: 4,
@@ -292,27 +260,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#4B5563',
     lineHeight: 20,
-  },
-  tabBar: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
-  },
-  tabItem: {
-    alignItems: 'center',
-  },
-  tabLabel: {
-    fontSize: 12,
-    color: '#9CA3AF',
-    marginTop: 4,
-  },
-  activeTabText: {
-    color: '#4F46E5',
   },
 });
 

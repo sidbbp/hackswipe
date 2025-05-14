@@ -1,29 +1,96 @@
 import React, { useState } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
+import {
+  View,
+  Text,
+  StyleSheet,
   TouchableOpacity,
-  ScrollView,
   TextInput,
-  Pressable,
+  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
+import { GestureDetector, Gesture } from 'react-native-gesture-handler';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+  runOnJS,
+} from 'react-native-reanimated';
 
-const mockGig = {
-  id: 1,
-  title: 'React Frontend Developer for Hackathon Project',
-  remote: true,
-  skills: ['React', 'TypeScript', 'UI/UX'],
-  deadline: 'May 15, 2025',
-  payRange: '$500 - $1000',
-  description: 'Looking for a React developer to help build the frontend for our hackathon project. The project is a platform for connecting developers with hackathon teams. You\'ll be working with our designer to implement the UI/UX.'
-};
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const SWIPE_THRESHOLD = SCREEN_WIDTH * 0.25;
 
-const FreelanceScreen = ({ navigation }) => {
+const mockGigs = [
+  {
+    id: 1,
+    title: 'React Frontend Developer for Hackathon Project',
+    remote: true,
+    skills: ['React', 'TypeScript', 'UI/UX'],
+    deadline: 'May 15, 2025',
+    payRange: '$500 - $1000',
+    description:
+      'Looking for a React developer to help build the frontend for our hackathon project.',
+  },
+  {
+    id: 2,
+    title: 'Backend Developer with Node.js',
+    remote: false,
+    skills: ['Node.js', 'Express', 'MongoDB'],
+    deadline: 'May 20, 2025',
+    payRange: '$400 - $800',
+    description:
+      'Join our backend team to create scalable APIs for our hackathon app.',
+  },
+];
+
+const FreelanceScreen = () => {
+  const [currentIndex, setCurrentIndex] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
-  
+
+  const translateX = useSharedValue(0);
+  const rotate = useSharedValue(0);
+  const opacity = useSharedValue(1);
+
+  const handleSwipeComplete = () => {
+    setCurrentIndex((prev) => (prev + 1 < mockGigs.length ? prev + 1 : 0));
+    translateX.value = 0;
+    rotate.value = 0;
+    opacity.value = 1;
+  };
+
+  const pan = Gesture.Pan()
+    .onUpdate((event) => {
+      translateX.value = event.translationX;
+      rotate.value = event.translationX / 20;
+    })
+    .onEnd(() => {
+      if (Math.abs(translateX.value) > SWIPE_THRESHOLD) {
+        translateX.value = withTiming(
+          translateX.value > 0 ? SCREEN_WIDTH : -SCREEN_WIDTH,
+          { duration: 300 },
+          () => {
+            runOnJS(handleSwipeComplete)();
+          }
+        );
+        opacity.value = withTiming(0, { duration: 300 });
+      } else {
+        translateX.value = withTiming(0, { duration: 300 });
+        rotate.value = withTiming(0, { duration: 300 });
+      }
+    });
+
+  const animatedCardStyle = useAnimatedStyle(() => {
+    return {
+      transform: [
+        { translateX: translateX.value },
+        { rotate: `${rotate.value}deg` },
+      ],
+      opacity: opacity.value,
+    };
+  });
+
+  const currentGig = mockGigs[currentIndex];
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -32,7 +99,7 @@ const FreelanceScreen = ({ navigation }) => {
           <Feather name="sliders" size={20} color="#111827" />
         </TouchableOpacity>
       </View>
-      
+
       <View style={styles.searchContainer}>
         <Feather name="search" size={20} color="#9CA3AF" style={styles.searchIcon} />
         <TextInput
@@ -47,90 +114,55 @@ const FreelanceScreen = ({ navigation }) => {
           </TouchableOpacity>
         )}
       </View>
-      
-      <ScrollView style={styles.content}>
-        <View style={styles.gigCard}>
-          <View style={styles.gigHeader}>
-            <Text style={styles.gigTitle}>{mockGig.title}</Text>
-            <View style={styles.remoteContainer}>
-              <Feather name="map-pin" size={14} color="#10B981" />
-              <Text style={styles.remoteText}>Remote</Text>
-            </View>
-          </View>
-          
-          <Text style={styles.sectionTitle}>Required Skills</Text>
-          <View style={styles.skillsContainer}>
-            {mockGig.skills.map((skill, index) => (
-              <View key={index} style={styles.skillBadge}>
-                <Text style={styles.skillText}>{skill}</Text>
-              </View>
-            ))}
-          </View>
-          
-          <View style={styles.detailsRow}>
-            <View style={styles.detailItem}>
-              <Text style={styles.detailLabel}>Deadline</Text>
-              <View style={styles.detailValue}>
-                <Feather name="calendar" size={14} color="#4B5563" />
-                <Text style={styles.detailText}>{mockGig.deadline}</Text>
+
+      <View style={styles.cardWrapper}>
+        <GestureDetector gesture={pan}>
+          <Animated.View style={[styles.gigCard, animatedCardStyle]}>
+            <View style={styles.gigHeader}>
+              <Text style={styles.gigTitle}>{currentGig.title}</Text>
+              <View style={styles.remoteContainer}>
+                <Feather name="map-pin" size={14} color="#10B981" />
+                <Text style={styles.remoteText}>
+                  {currentGig.remote ? 'Remote' : 'On-site'}
+                </Text>
               </View>
             </View>
-            
-            <View style={styles.detailItem}>
-              <Text style={styles.detailLabel}>Pay Range</Text>
-              <View style={styles.detailValue}>
-                <Feather name="dollar-sign" size={14} color="#4B5563" />
-                <Text style={styles.detailText}>{mockGig.payRange}</Text>
+
+            <Text style={styles.sectionTitle}>Required Skills</Text>
+            <View style={styles.skillsContainer}>
+              {currentGig.skills.map((skill, index) => (
+                <View key={index} style={styles.skillBadge}>
+                  <Text style={styles.skillText}>{skill}</Text>
+                </View>
+              ))}
+            </View>
+
+            <View style={styles.detailsRow}>
+              <View style={styles.detailItem}>
+                <Text style={styles.detailLabel}>Deadline</Text>
+                <View style={styles.detailValue}>
+                  <Feather name="calendar" size={14} color="#4B5563" />
+                  <Text style={styles.detailText}>{currentGig.deadline}</Text>
+                </View>
+              </View>
+
+              <View style={styles.detailItem}>
+                <Text style={styles.detailLabel}>Pay Range</Text>
+                <View style={styles.detailValue}>
+                  <Feather name="dollar-sign" size={14} color="#4B5563" />
+                  <Text style={styles.detailText}>{currentGig.payRange}</Text>
+                </View>
               </View>
             </View>
-          </View>
-          
-          <Text style={styles.sectionTitle}>Description</Text>
-          <Text style={styles.description}>{mockGig.description}</Text>
-          
-          <TouchableOpacity style={styles.applyButton}>
-            <Text style={styles.applyButtonText}>Apply Now</Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
-      
-      <View style={styles.tabBar}>
-        <TouchableOpacity 
-          style={styles.tabItem}
-          onPress={() => navigation.navigate('SwipeScreen')}
-        >
-          <Feather name="home" size={24} color="#9CA3AF" />
-          <Text style={styles.tabLabel}>Find Hackathons</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={styles.tabItem}
-          onPress={() => navigation.navigate('MyEvents')}
-        >
-          <Feather name="calendar" size={24} color="#9CA3AF" />
-          <Text style={styles.tabLabel}>My Events</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity style={styles.tabItem}>
-          <Feather name="briefcase" size={24} color="#4F46E5" />
-          <Text style={[styles.tabLabel, styles.activeTabText]}>Freelance</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={styles.tabItem}
-          onPress={() => navigation.navigate('HireDevs')}
-        >
-          <Feather name="users" size={24} color="#9CA3AF" />
-          <Text style={styles.tabLabel}>Hire Devs</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={styles.tabItem}
-          onPress={() => navigation.navigate('Profile')}
-        >
-          <Feather name="user" size={24} color="#9CA3AF" />
-          <Text style={styles.tabLabel}>Profile</Text>
-        </TouchableOpacity>
+
+            <Text style={styles.sectionTitle}>Description</Text>
+            <Text style={styles.description}>{currentGig.description}</Text>
+
+            <TouchableOpacity style={styles.applyButton}>
+              <Text style={styles.applyButtonText}>Apply Now</Text>
+            </TouchableOpacity>
+          </Animated.View>
+        </GestureDetector>
       </View>
     </SafeAreaView>
   );
@@ -180,19 +212,19 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#111827',
   },
-  content: {
+  cardWrapper: {
     flex: 1,
     padding: 16,
   },
   gigCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
+    padding: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 2,
-    padding: 16,
+    elevation: 3,
   },
   gigHeader: {
     marginBottom: 16,
@@ -274,27 +306,6 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
-  },
-  tabBar: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
-  },
-  tabItem: {
-    alignItems: 'center',
-  },
-  tabLabel: {
-    fontSize: 12,
-    color: '#9CA3AF',
-    marginTop: 4,
-  },
-  activeTabText: {
-    color: '#4F46E5',
   },
 });
 
