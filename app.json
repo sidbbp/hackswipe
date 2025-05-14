@@ -27,6 +27,19 @@
       "favicon": "./assets/favicon.png",
       "bundler": "metro"
     },
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow HackSwipe to use your location."
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "hackswipe"
+      }
+    },
     "experiments": {
       "tsconfigPaths": true
     },

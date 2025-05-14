@@ -1,5 +1,5 @@
 import * as Location from 'expo-location';
-import { Platform, Alert } from 'react-native';
+import { Platform } from 'react-native';
 
 /**
  * Check if the app has permission to access the user's location
@@ -22,17 +22,7 @@ export const checkLocationPermission = async () => {
 export const requestLocationPermission = async () => {
   try {
     const { status } = await Location.requestForegroundPermissionsAsync();
-    
-    if (status !== 'granted') {
-      Alert.alert(
-        'Location Permission Required',
-        'HackSwipe needs your location to find hackathons near you. Please enable location services in your device settings.',
-        [{ text: 'OK' }]
-      );
-      return false;
-    }
-    
-    return true;
+    return status === 'granted';
   } catch (error) {
     console.error('Error requesting location permission:', error);
     return false;
@@ -45,30 +35,77 @@ export const requestLocationPermission = async () => {
  */
 export const getCurrentLocation = async () => {
   try {
-    // First check if we have permission
-    const hasPermission = await checkLocationPermission();
-    
-    if (!hasPermission) {
-      // Request permission
-      const permissionResult = await requestLocationPermission();
-      
-      if (!permissionResult) {
-        throw new Error('Location permission denied');
+    // For web platform
+    if (Platform.OS === 'web') {
+      if ('geolocation' in navigator) {
+        const getWebLocation = () => {
+          return new Promise((resolve, reject) => {
+            navigator.geolocation.getCurrentPosition(
+              (position) => resolve({
+                coords: {
+                  latitude: position.coords.latitude,
+                  longitude: position.coords.longitude,
+                }
+              }),
+              (error) => reject(error),
+              { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
+            );
+          });
+        };
+        
+        try {
+          const position = await getWebLocation();
+          return position;
+        } catch (webError) {
+          console.error('Error getting web location:', webError);
+          return {
+            coords: {
+              latitude: 37.7749, // San Francisco
+              longitude: -122.4194,
+            }
+          };
+        }
+      } else {
+        console.log('Geolocation is not supported by this browser.');
+        return {
+          coords: {
+            latitude: 37.7749, // San Francisco
+            longitude: -122.4194,
+          }
+        };
       }
+    } 
+    // For mobile platforms
+    else {
+      const hasPermission = await checkLocationPermission();
+      
+      if (!hasPermission) {
+        const permissionResult = await requestLocationPermission();
+        
+        if (!permissionResult) {
+          return {
+            coords: {
+              latitude: 37.7749, // San Francisco
+              longitude: -122.4194,
+            }
+          };
+        }
+      }
+      
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+      });
+      
+      return location;
     }
-    
-    // Get the location
-    const location = await Location.getCurrentPositionAsync({
-      accuracy: Location.Accuracy.Balanced,
-    });
-    
-    return {
-      latitude: location.coords.latitude,
-      longitude: location.coords.longitude,
-    };
   } catch (error) {
-    console.error('Error getting current location:', error);
-    throw error;
+    console.error('Error getting location:', error);
+    return {
+      coords: {
+        latitude: 37.7749, // San Francisco
+        longitude: -122.4194,
+      }
+    };
   }
 };
 

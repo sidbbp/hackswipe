@@ -27,8 +27,18 @@ const mockHackathon = {
   deadline: 'May 25, 2025',
 };
 
-const SwipeScreen = ({ navigation }) => {
+// Using the prop userLocation that gets passed from navigation
+const SwipeScreen = ({ navigation, userLocation }) => {
   const [loading, setLoading] = useState(false);
+  const [hackathons, setHackathons] = useState([]);
+  const [error, setError] = useState(null);
+  
+  // Add this useEffect to log userLocation for debugging
+  useEffect(() => {
+    console.log("Current user location:", userLocation);
+    // In a real app, we would fetch hackathons based on location
+    // fetchHackathonsNearby(userLocation.latitude, userLocation.longitude);
+  }, [userLocation]);
 
   return (
     <SafeAreaView style={styles.container}>
