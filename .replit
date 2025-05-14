@@ -22,11 +22,11 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "npm install && EXPO_LEGACY_BUNDLER=1 npx expo start --web --port 5000 --clear --no-dev --reset-cache"
+args = "npm install && EXPO_LEGACY_BUNDLER=1 npx expo start --web --port 5000 --clear"
 waitForPort = 5000
 
 [deployment]
-run = ["sh", "-c", "npm install && EXPO_LEGACY_BUNDLER=1 npx expo start --web --port 5000 --clear --no-dev --reset-cache"]
+run = ["sh", "-c", "npm install && EXPO_LEGACY_BUNDLER=1 npx expo start --web --port 5000 --clear"]
 
 [[ports]]
 localPort = 5000
