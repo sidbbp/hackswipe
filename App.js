@@ -5,6 +5,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useSanFranciscoLocation } from './utils/locationUtils';
 import AppNavigator from './navigation/AppNavigator';
+import 'react-native-gesture-handler'; // Important for mobile gesture handling
 
 export default function App() {
   // Add the location state to fix the missing setUserLocation error

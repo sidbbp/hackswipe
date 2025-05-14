@@ -1,5 +1,5 @@
 import React from 'react';
-import { createStackNavigator } from '@react-navigation/stack';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Feather } from '@expo/vector-icons';
 import { View, Text } from 'react-native';
@@ -10,7 +10,8 @@ import FreelanceScreen from '../screens/FreelanceScreen.jsx';
 import HireDevsScreen from '../screens/HireDevsScreen.jsx';
 import ProfileScreen from '../screens/ProfileScreen.jsx';
 
-const Stack = createStackNavigator();
+// Changed from Stack to NativeStack for better performance and compatibility
+const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
 // Create a TabNavigator for the main app screens
@@ -34,28 +35,20 @@ const MainTabNavigator = ({ userLocation }) => {
       <Tab.Screen 
         name="SwipeScreen" 
         options={{
-          tabBarLabel: ({ focused }) => (
-            <Text style={{ fontSize: 12, color: focused ? '#4F46E5' : '#9CA3AF' }}>
-              Find Hackathons
-            </Text>
-          ),
+          tabBarLabel: 'Find Hackathons',
           tabBarIcon: ({ color }) => (
             <Feather name="home" size={24} color={color} />
           ),
         }}
       >
-        {props => <SwipeScreen {...props} userLocation={userLocation} />}
+        {(props) => <SwipeScreen {...props} userLocation={userLocation} />}
       </Tab.Screen>
       
       <Tab.Screen 
         name="MyEvents" 
         component={MyEventsScreen}
         options={{
-          tabBarLabel: ({ focused }) => (
-            <Text style={{ fontSize: 12, color: focused ? '#4F46E5' : '#9CA3AF' }}>
-              My Events
-            </Text>
-          ),
+          tabBarLabel: 'My Events',
           tabBarIcon: ({ color }) => (
             <Feather name="calendar" size={24} color={color} />
           ),
@@ -66,11 +59,7 @@ const MainTabNavigator = ({ userLocation }) => {
         name="Freelance" 
         component={FreelanceScreen}
         options={{
-          tabBarLabel: ({ focused }) => (
-            <Text style={{ fontSize: 12, color: focused ? '#4F46E5' : '#9CA3AF' }}>
-              Freelance
-            </Text>
-          ),
+          tabBarLabel: 'Freelance',
           tabBarIcon: ({ color }) => (
             <Feather name="briefcase" size={24} color={color} />
           ),
@@ -81,11 +70,7 @@ const MainTabNavigator = ({ userLocation }) => {
         name="HireDevs" 
         component={HireDevsScreen}
         options={{
-          tabBarLabel: ({ focused }) => (
-            <Text style={{ fontSize: 12, color: focused ? '#4F46E5' : '#9CA3AF' }}>
-              Hire Devs
-            </Text>
-          ),
+          tabBarLabel: 'Hire Devs',
           tabBarIcon: ({ color }) => (
             <Feather name="users" size={24} color={color} />
           ),
@@ -96,11 +81,7 @@ const MainTabNavigator = ({ userLocation }) => {
         name="Profile" 
         component={ProfileScreen}
         options={{
-          tabBarLabel: ({ focused }) => (
-            <Text style={{ fontSize: 12, color: focused ? '#4F46E5' : '#9CA3AF' }}>
-              Profile
-            </Text>
-          ),
+          tabBarLabel: 'Profile',
           tabBarIcon: ({ color }) => (
             <Feather name="user" size={24} color={color} />
           ),
@@ -116,10 +97,11 @@ const AppNavigator = ({ userLocation, setUserLocation, isLocationSet, setIsLocat
     <Stack.Navigator
       screenOptions={{
         headerShown: false,
+        animation: 'fade',
       }}
     >
       <Stack.Screen name="MainTabs">
-        {props => <MainTabNavigator {...props} userLocation={userLocation} />}
+        {(props) => <MainTabNavigator {...props} userLocation={userLocation} />}
       </Stack.Screen>
     </Stack.Navigator>
   );
