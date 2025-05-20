@@ -20,24 +20,34 @@ export default function SwipeScreen() {
 
   const translateX = useSharedValue(0);
   const rotate = useSharedValue(0);
-  const isSwiping = useSharedValue(false);
 
   const handleSwipeComplete = (direction) => {
     const event = mockHackathons[currentIndex];
 
     if (direction === "right") {
-      saveEvent(event);
-    } else {
-      console.log("Skipped:", event.name);
+      // Ensure the event has the correct structure for MyEventsScreen
+      saveEvent({
+        id: event.id || `${event.name}-${Date.now()}`,
+        hackathons: {
+          name: event.name,
+          start_date: event.start_date,
+          location: event.location,
+          imageUrl: event.imageUrl,
+        },
+        name: event.name,
+        start_date: event.start_date,
+        location: event.location,
+        imageUrl: event.imageUrl,
+        team_name: "Solo",
+        join_type: "solo",
+      });
     }
 
-    runOnJS(setCurrentIndex)((prev) =>
+    setCurrentIndex((prev) =>
       prev + 1 < mockHackathons.length ? prev + 1 : 0
     );
-
     translateX.value = 0;
     rotate.value = 0;
-    isSwiping.value = false;
   };
 
   const panGesture = Gesture.Pan()
@@ -47,7 +57,6 @@ export default function SwipeScreen() {
     })
     .onEnd(() => {
       const shouldSwipe = Math.abs(translateX.value) > SWIPE_THRESHOLD;
-
       if (shouldSwipe) {
         const direction = translateX.value > 0 ? "right" : "left";
         translateX.value = withTiming(

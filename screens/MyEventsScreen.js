@@ -1,113 +1,35 @@
-import React, { useState, useEffect } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import { 
   View, 
   Text, 
   StyleSheet, 
   ScrollView, 
   TouchableOpacity, 
-  ActivityIndicator, 
-  Alert 
+  ActivityIndicator 
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
-import EventCard from '../components/EventCard';
-import { fetchUserEvents } from '../supabaseClient';
-import { mockUserEvents } from '../data/mockData';
+import { EventsContext } from './EventsContext';
 
 const MyEventsScreen = () => {
+  const { savedEvents } = useContext(EventsContext);
   const [activeTab, setActiveTab] = useState('upcoming');
-  const [events, setEvents] = useState({ upcomingEvents: [], pastEvents: [] });
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    loadEvents();
-  }, []);
-
-  const loadEvents = async () => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      // In a real app, you'd get the user ID from authentication
-      const mockUserId = '123e4567-e89b-12d3-a456-426614174000';
-      
-      // Try to fetch from Supabase
-      const userEvents = await fetchUserEvents(mockUserId);
-      
-      // If no events or there was an error, use mock data
-      if (userEvents.upcomingEvents.length === 0 && userEvents.pastEvents.length === 0) {
-        setEvents(mockUserEvents);
-      } else {
-        setEvents(userEvents);
-      }
-    } catch (err) {
-      console.error('Error loading events:', err);
-      setError('Failed to load your events. Please try again.');
-      
-      // Use mock data as fallback
-      setEvents(mockUserEvents);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleRemoveEvent = async (eventId) => {
-    try {
-      // In a real app, you would call Supabase to remove the event
-      
-      // For now, just update local state
-      const updatedUpcomingEvents = events.upcomingEvents.filter(
-        event => event.id !== eventId
-      );
-      
-      const updatedPastEvents = events.pastEvents.filter(
-        event => event.id !== eventId
-      );
-      
-      setEvents({
-        upcomingEvents: updatedUpcomingEvents,
-        pastEvents: updatedPastEvents
-      });
-      
-      Alert.alert('Success', 'Event removed successfully');
-    } catch (error) {
-      console.error('Error removing event:', error);
-      Alert.alert('Error', 'Failed to remove event. Please try again.');
-    }
-  };
-
-  if (loading) {
-    return (
-      <SafeAreaView style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#4F46E5" />
-        <Text style={styles.loadingText}>Loading your events...</Text>
-      </SafeAreaView>
-    );
-  }
-
-  if (error) {
-    return (
-      <SafeAreaView style={styles.errorContainer}>
-        <Feather name="alert-circle" size={40} color="#EF4444" />
-        <Text style={styles.errorText}>{error}</Text>
-        <TouchableOpacity style={styles.retryButton} onPress={loadEvents}>
-          <Text style={styles.retryButtonText}>Retry</Text>
-        </TouchableOpacity>
-      </SafeAreaView>
-    );
-  }
-
-  const activeEvents = activeTab === 'upcoming' 
-    ? events.upcomingEvents 
-    : events.pastEvents;
+  // Filter events based on tab and date
+  const now = new Date();
+  const eventsToShow = savedEvents.filter(event => {
+    const eventDate = new Date(event.start_date || event.hackathons?.start_date);
+    return activeTab === 'upcoming'
+      ? eventDate >= now
+      : eventDate < now;
+  });
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>My Events</Text>
       </View>
-      
       <View style={styles.tabContainer}>
         <TouchableOpacity
           style={[
@@ -122,13 +44,20 @@ const MyEventsScreen = () => {
           ]}>
             Upcoming
           </Text>
-          {events.upcomingEvents.length > 0 && (
+          {eventsToShow.filter(e => {
+            const eventDate = new Date(e.start_date || e.hackathons?.start_date);
+            return eventDate >= now;
+          }).length > 0 && (
             <View style={styles.badge}>
-              <Text style={styles.badgeText}>{events.upcomingEvents.length}</Text>
+              <Text style={styles.badgeText}>
+                {eventsToShow.filter(e => {
+                  const eventDate = new Date(e.start_date || e.hackathons?.start_date);
+                  return eventDate >= now;
+                }).length}
+              </Text>
             </View>
           )}
         </TouchableOpacity>
-        
         <TouchableOpacity
           style={[
             styles.tab,
@@ -142,15 +71,27 @@ const MyEventsScreen = () => {
           ]}>
             Past
           </Text>
-          {events.pastEvents.length > 0 && (
+          {eventsToShow.filter(e => {
+            const eventDate = new Date(e.start_date || e.hackathons?.start_date);
+            return eventDate < now;
+          }).length > 0 && (
             <View style={styles.badge}>
-              <Text style={styles.badgeText}>{events.pastEvents.length}</Text>
+              <Text style={styles.badgeText}>
+                {eventsToShow.filter(e => {
+                  const eventDate = new Date(e.start_date || e.hackathons?.start_date);
+                  return eventDate < now;
+                }).length}
+              </Text>
             </View>
           )}
         </TouchableOpacity>
       </View>
-      
-      {activeEvents.length === 0 ? (
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#4F46E5" />
+          <Text style={styles.loadingText}>Loading your events...</Text>
+        </View>
+      ) : eventsToShow.length === 0 ? (
         <View style={styles.emptyContainer}>
           <Feather name="calendar" size={48} color="#9CA3AF" />
           <Text style={styles.emptyTitle}>
@@ -169,14 +110,24 @@ const MyEventsScreen = () => {
           style={styles.eventsList}
           contentContainerStyle={styles.eventsListContent}
         >
-          {activeEvents.map((event) => (
-            <EventCard
-              key={event.id}
-              event={event}
-              isPast={activeTab === 'past'}
-              onRemove={handleRemoveEvent}
-            />
-          ))}
+          {eventsToShow.map((event) => {
+            const hack = event.hackathons || {};
+            return (
+              <View key={event.id} style={styles.eventCard}>
+                <View style={styles.eventDetails}>
+                  <Text style={styles.eventName}>
+                    {hack.name || event.name}
+                  </Text>
+                  <Text style={styles.eventMetaText}>
+                    {hack.start_date || event.start_date} | {hack.location || event.location}
+                  </Text>
+                  <Text style={styles.teamLabel}>
+                    Team: {event.team_name || 'Solo'}
+                  </Text>
+                </View>
+              </View>
+            );
+          })}
         </ScrollView>
       )}
     </SafeAreaView>
@@ -184,46 +135,7 @@ const MyEventsScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F9FAFB',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#F9FAFB',
-  },
-  loadingText: {
-    marginTop: 16,
-    fontSize: 16,
-    color: '#4B5563',
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#F9FAFB',
-    padding: 20,
-  },
-  errorText: {
-    marginTop: 16,
-    fontSize: 16,
-    color: '#EF4444',
-    textAlign: 'center',
-    marginBottom: 24,
-  },
-  retryButton: {
-    backgroundColor: '#4F46E5',
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 8,
-  },
-  retryButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
+  container: { flex: 1, backgroundColor: '#F9FAFB' },
   header: {
     padding: 16,
     borderBottomWidth: 1,
@@ -295,6 +207,47 @@ const styles = StyleSheet.create({
   },
   eventsListContent: {
     padding: 16,
+  },
+  eventCard: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  eventDetails: {
+    // ...existing code...
+  },
+  eventName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#111827',
+    marginBottom: 4,
+  },
+  eventMetaText: {
+    fontSize: 12,
+    color: '#6B7280',
+    marginBottom: 4,
+  },
+  teamLabel: {
+    fontSize: 12,
+    color: '#6B7280',
+    marginBottom: 4,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F9FAFB',
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#4B5563',
   },
 });
 

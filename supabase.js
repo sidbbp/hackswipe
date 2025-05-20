@@ -13,6 +13,8 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     persistSession: true,
     detectSessionInUrl: false,
   },
+  // Disable realtime for React Native to avoid ws/http errors
+  realtime: { enabled: false },
 });
 
 export default supabase;

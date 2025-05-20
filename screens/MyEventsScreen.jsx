@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,13 +9,44 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
-import { mockUserEvents } from '../data/mockData'; // Importing mock data
+import { EventsContext } from './EventsContext';
+import { mockUserEvents } from '../data/mockData';
 
-const MyEventsScreen = ({ navigation }) => {
+const MyEventsScreen = () => {
+  const { savedEvents, setSavedEvents } = useContext(EventsContext);
   const [activeTab, setActiveTab] = useState('upcoming');
-  
-  // Use the mockUserEvents data directly
-  const savedEvents = activeTab === 'upcoming' ? mockUserEvents.upcomingEvents : mockUserEvents.pastEvents;
+  const [_, forceUpdate] = useState(0); // force re-render
+
+  useEffect(() => {
+    // Force re-render when savedEvents changes (in case context doesn't trigger update)
+    forceUpdate(n => n + 1);
+  }, [savedEvents]);
+
+  useEffect(() => {
+    // Only set mock events if savedEvents is undefined (not null or empty array)
+    if (typeof savedEvents === 'undefined' || savedEvents === null) {
+      const allEvents = [
+        ...(mockUserEvents.upcomingEvents || []),
+        ...(mockUserEvents.pastEvents || [])
+      ];
+      setSavedEvents(allEvents);
+    }
+  }, [savedEvents, setSavedEvents]);
+
+  // Filter events based on tab and date
+  const now = new Date();
+  // Fix for React Native mobile: always use a new array reference to trigger re-render
+  const [eventsList, setEventsList] = useState([]);
+  useEffect(() => {
+    setEventsList(Array.isArray(savedEvents) ? [...savedEvents] : []);
+  }, [savedEvents]);
+
+  const eventsToShow = eventsList.filter(event => {
+    const eventDate = new Date(event.hackathons?.start_date || event.start_date);
+    return activeTab === 'upcoming'
+      ? eventDate >= now
+      : eventDate < now;
+  });
 
   return (
     <SafeAreaView style={styles.container}>
@@ -31,7 +62,12 @@ const MyEventsScreen = ({ navigation }) => {
           style={[styles.tab, activeTab === 'upcoming' && styles.activeTab]}
           onPress={() => setActiveTab('upcoming')}
         >
-          <Text style={[styles.tabText, activeTab === 'upcoming' && styles.activeTabText]}>
+          <Text
+            style={[
+              styles.tabText,
+              activeTab === 'upcoming' && styles.activeTabText,
+            ]}
+          >
             Upcoming
           </Text>
         </TouchableOpacity>
@@ -39,46 +75,87 @@ const MyEventsScreen = ({ navigation }) => {
           style={[styles.tab, activeTab === 'past' && styles.activeTab]}
           onPress={() => setActiveTab('past')}
         >
-          <Text style={[styles.tabText, activeTab === 'past' && styles.activeTabText]}>
+          <Text
+            style={[
+              styles.tabText,
+              activeTab === 'past' && styles.activeTabText,
+            ]}
+          >
             Past
           </Text>
         </TouchableOpacity>
       </View>
 
       <ScrollView style={styles.content}>
-        {savedEvents.length === 0 ? (
-          <Text style={{ textAlign: 'center', color: '#6B7280', marginTop: 40 }}>
-            No {activeTab} events found.
-          </Text>
+        {eventsToShow.length === 0 ? (
+          <View style={styles.emptyContainer}>
+            <Feather name="calendar" size={48} color="#9CA3AF" />
+            <Text style={styles.emptyTitle}>
+              {activeTab === 'upcoming'
+                ? 'No upcoming events'
+                : 'No past events'}
+            </Text>
+            <Text style={styles.emptyMessage}>
+              {activeTab === 'upcoming'
+                ? 'Swipe right to join hackathons and they will appear here.'
+                : 'Your completed hackathons will appear here.'}
+            </Text>
+          </View>
         ) : (
-          savedEvents.map(event => (
-            <TouchableOpacity key={event.id} style={styles.eventCard}>
-              <Image
-                source={{ uri: event.hackathons.imageUrl || 'https://via.placeholder.com/80' }} // Default image if no URL
-                style={styles.eventImage}
-                resizeMode="cover"
-              />
-              <View style={styles.eventDetails}>
-                <Text style={styles.eventName}>{event.hackathons.name}</Text>
-                <View style={styles.eventMeta}>
-                  <View style={styles.eventMetaItem}>
-                    <Feather name="calendar" size={14} color="#6B7280" />
-                    <Text style={styles.eventMetaText}>{event.hackathons.start_date}</Text>
+          eventsToShow.map((event) => {
+            const hackathons = event.hackathons || {
+              name: event.name,
+              start_date: event.start_date,
+              location: event.location,
+              imageUrl: event.imageUrl,
+            };
+            return (
+              <TouchableOpacity key={event.id} style={styles.eventCard}>
+                <Image
+                  source={{
+                    uri:
+                      hackathons.imageUrl?.trim() ||
+                      'https://via.placeholder.com/80',
+                  }}
+                  style={styles.eventImage}
+                  resizeMode="cover"
+                />
+                <View style={styles.eventDetails}>
+                  <Text style={styles.eventName}>
+                    {hackathons.name
+                      ? String(hackathons.name)
+                      : 'Unnamed Event'}
+                  </Text>
+                  <View style={styles.eventMeta}>
+                    <View style={styles.eventMetaItem}>
+                      <Feather name="calendar" size={14} color="#6B7280" />
+                      <Text style={styles.eventMetaText}>
+                        {hackathons.start_date
+                          ? new Date(hackathons.start_date).toDateString()
+                          : ''}
+                      </Text>
+                    </View>
+                    <View style={styles.eventMetaItem}>
+                      <Feather name="map-pin" size={14} color="#6B7280" />
+                      <Text style={styles.eventMetaText}>
+                        {hackathons.location
+                          ? String(hackathons.location)
+                          : ''}
+                      </Text>
+                    </View>
                   </View>
-                  <View style={styles.eventMetaItem}>
-                    <Feather name="map-pin" size={14} color="#6B7280" />
-                    <Text style={styles.eventMetaText}>{event.hackathons.location}</Text>
+                  <View style={styles.teamInfo}>
+                    <Text style={styles.teamLabel}>
+                      Team: {event.team_name ? String(event.team_name) : 'Solo'}
+                    </Text>
                   </View>
                 </View>
-                <View style={styles.teamInfo}>
-                  <Text style={styles.teamLabel}>Team: {event.team_name || 'Solo'}</Text>
+                <View style={styles.moreButton}>
+                  <Feather name="more-vertical" size={20} color="#6B7280" />
                 </View>
-              </View>
-              <TouchableOpacity style={styles.moreButton}>
-                <Feather name="more-vertical" size={20} color="#6B7280" />
               </TouchableOpacity>
-            </TouchableOpacity>
-          ))
+            );
+          })
         )}
       </ScrollView>
     </SafeAreaView>
@@ -98,7 +175,12 @@ const styles = StyleSheet.create({
     borderBottomColor: '#E5E7EB',
   },
   headerTitle: { fontSize: 20, fontWeight: 'bold', color: '#111827' },
-  calendarButton: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
+  calendarButton: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   tabsContainer: {
     flexDirection: 'row',
     backgroundColor: '#FFFFFF',
@@ -127,11 +209,35 @@ const styles = StyleSheet.create({
   eventDetails: { flex: 1, padding: 12 },
   eventName: { fontSize: 16, fontWeight: '600', color: '#111827', marginBottom: 4 },
   eventMeta: { flexDirection: 'row', flexWrap: 'wrap', marginBottom: 8 },
-  eventMetaItem: { flexDirection: 'row', alignItems: 'center', marginRight: 12, marginBottom: 4 },
+  eventMetaItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 12,
+    marginBottom: 4,
+  },
   eventMetaText: { fontSize: 12, color: '#6B7280', marginLeft: 4 },
   teamInfo: { flexDirection: 'row', alignItems: 'center' },
   teamLabel: { fontSize: 12, color: '#6B7280', marginBottom: 4 },
   moreButton: { padding: 12, justifyContent: 'center' },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 60,
+    paddingHorizontal: 16,
+  },
+  emptyTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#1F2937',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  emptyMessage: {
+    fontSize: 14,
+    color: '#6B7280',
+    textAlign: 'center',
+  },
 });
 
 export default MyEventsScreen;
